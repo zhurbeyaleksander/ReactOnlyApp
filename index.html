@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Интернет магазин</title>
+    <link href="https://fonts.googleapis.com/css?family=IBM+Plex+Serif" rel="stylesheet">
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <script src="https://unpkg.com/react@16/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+
+    <!-- Не используйте это в production -->
+    <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+  </head>
+  <body>
+<div id="root"></div>
+
+<script type="text/babel">
+
+class App extends React.Component{
+    constructor(props){
+        super(props);
+
+        this.cartPage = this.cartPage.bind(this);
+        this.itemList = this.itemList.bind(this);
+        this.plusOne = this.plusOne.bind(this);
+        this.minusOne = this.minusOne.bind(this);
+        this.countFinalPrice = this.countFinalPrice.bind(this);
+        this.removeItemFromCart = this.removeItemFromCart.bind(this);
+        this.clearCart = this.clearCart.bind(this);
+        this.state = {page: 'itemList', 
+        arr2: [
+    {id: 1, item: 'Товар 1', price: 100, count: 0},
+    {id: 2, item: 'Товар 2', price: 150, count: 0},
+    {id: 3, item: 'Товар 3', price: 200, count: 0},
+    {id: 4, item: 'Товар 4', price: 250, count: 0},
+    ] ,
+    finalPrice: 0};
+
+    }
+
+    itemList(){
+        this.setState({page: 'itemList'});
+    }
+
+    cartPage(){
+        this.setState({page: 'cart'});
+    }
+
+    plusOne(value){
+        let newArr = this.state.arr2.forEach(function(item, i, arr) {
+        if(value.id == item.id){
+            arr[i] = {id: item.id, item: item.item, price: item.price, count: item.count + 1}
+        }
+});
+      this.setState({arr2: this.state.arr2   
+    });
+
+    this.countFinalPrice();
+    }
+
+    minusOne(value){
+        let newArr = this.state.arr2.forEach(function(item, i, arr) {
+        if(value.id == item.id){
+            arr[i] = {id: item.id, item: item.item, price: item.price, count: item.count - 1}
+        }
+});
+      this.setState({arr2: this.state.arr2   
+    });
+
+    this.countFinalPrice();
+    }
+
+    clearCart(value){
+        let newArr = this.state.arr2.forEach(function(item, i, arr) {
+       
+            arr[i] = {id: item.id, item: item.item, price: item.price, count: 0}
+});
+      this.setState({arr2: this.state.arr2   
+    });
+
+    this.countFinalPrice();
+    }
+
+    removeItemFromCart(value){
+        let newArr = this.state.arr2.forEach(function(item, i, arr) {
+        if(value.id == item.id){
+            arr[i] = {id: item.id, item: item.item, price: item.price, count: 0}
+        }
+});
+      this.setState({arr2: this.state.arr2   
+    });
+
+    this.countFinalPrice();
+    }
+
+    countFinalPrice(){
+
+      let price = 0;
+      
+      let fp = this.state.arr2.forEach(function(item, i, arr) {
+      price  += (item.count * item.price);
+});
+
+this.setState({finalPrice: price});
+    }
+
+
+
+    render(){
+        const page = this.state.page;
+        const arr = this.state.arr2;
+        let finalPrice = this.state.finalPrice;
+        let buttons;
+        let clearButton;
+
+
+        if(page == 'itemList'){
+            buttons = <Buttons page={page} onClick={this.cartPage} />
+            clearButton = <ClearCart page={page} onClick={this.clearCart} />
+        } else if(page == 'cart'){
+        buttons = <Buttons page={page} onClick={this.itemList} />
+        clearButton = <ClearCart page={page} onClick={this.clearCart} />
+        }
+
+        return (
+           <div className="container mainCont rounded">
+          <Router page={page} removeItemFromCart={this.removeItemFromCart} clearCart={this.clearCart} plusOne={this.plusOne} minusOne={this.minusOne}  arr2={arr} finalPrice={finalPrice}/>
+          {buttons} {clearButton} 
+         </div>
+        );
+    }
+}
+
+function Router(props){
+    const page = props.page;
+    const arr = props.arr2;
+    
+    if(page == 'itemList'){
+        return  <div>
+    <ItemList itemList={arr} onClick={props.onClick} plusOne={props.plusOne}  />
+    </div>;
+    } else if(page == 'cart'){
+        return  <div>
+    <Cart itemList={arr} onClick={props.onClick} clearCart={props.clearCart}  minusOne={props.minusOne} removeItemFromCart={props.removeItemFromCart} finalPrice={props.finalPrice}/>
+    </div>;
+    }
+
+        
+}
+
+
+function ItemList(props){
+
+
+
+    const itemList = props.itemList.map((item) =>
+
+    
+    <tr>
+    <td>{item.item} </td> <td>{item.price}</td><td>{item.count}</td>
+    <td> 
+    <button className="btn btn-primary" onClick={(e) => props.plusOne(item, e)}>+</button>
+    </td>
+     </tr>
+    );
+
+    return <div><h1>Список товаров</h1>
+        <table className="table table-borderless">
+        <thead className="table-dark rounded">
+    <tr>
+      <th scope="col">Название</th>
+      <th scope="col">Цена</th>
+      <th scope="col">Количество</th>
+      <th scope="col"></th>
+    </tr>
+  </thead>
+  <tbody>
+        {itemList}
+    </tbody>
+  </table>
+    </div>;
+}
+
+function Cart(props){
+
+    let finalPrice = props.finalPrice;
+
+    const arrCart = props.itemList.filter(function(item) {
+        return item.count > 0;
+});
+
+    const itemList = arrCart.map((item) =>
+    <tr>
+    <td>{item.item}</td> <td> {item.price * item.count}</td> <td>{item.count} </td> 
+    <td>
+    <button className="btn btn-primary" onClick={(e) => props.minusOne(item, e)}>-</button>
+    </td>
+    <td>
+    <button className="btn btn-primary" onClick={(e) => props.removeItemFromCart(item, e)}>Удалить всё</button>
+    </td>
+    </tr>
+    );
+
+    return <div><h1>Корзина</h1>
+        <table className="table table-borderless">
+        <thead className="table-dark rounded">
+    <tr>
+      <th scope="col">Название</th>
+      <th scope="col">Стоимость</th>
+      <th scope="col">Количество</th>
+      <th scope="col"></th>
+      <th scope="col"></th>
+    </tr>
+  </thead>
+  <tbody>
+        {itemList}
+    </tbody>
+    </table>
+        <b>Итого</b> {finalPrice}
+    </div>;
+}
+
+function Buttons(props){
+    const page = props.page;
+
+
+    if(page == 'itemList'){
+    return (
+        <button className="btn btn-primary" onClick={props.onClick}>
+        Корзина
+        </button>
+    );
+    } else if(page == 'cart'){
+        return (
+        <button className="btn btn-primary" onClick={props.onClick}>
+        Перейти в список товаров
+        </button>
+    );
+    }
+
+}
+
+function ClearCart(props){
+    const page = props.page;
+
+    if(page == 'itemList'){
+        return null;
+    }
+
+    return(
+        <button className="btn btn-primary" onClick={props.onClick}>
+        Очистить корзину
+        </button>
+    );
+}
+
+
+ReactDOM.render(
+    <App />,
+    document.getElementById('root')
+);
+
+</script>
+
+  </body>
+</html>
